@@ -1,12 +1,12 @@
 # Getting started with FQL (Fauna Query Language)
 
-This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL is difficult to grasp until it *clicks*. Each section builds on the previous ones so if you are just skimming and don't understand something you probably need to go back.
+This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL to be difficult to grasp until it *clicks*. Each section builds on the previous ones so if you are just skimming and don't understand something you probably need to go back.
 
 I'm also learning FQL as I go along so don't hesitate to correct me.
 
 To get started with Fauna just open a free account and go to the [dashboard](https://dashboard.fauna.com/).
 
-If you get stuck sign into the [Fauna's community Slack](https://community-invite.fauna.com/). There's people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
+If you get stuck sign into [Fauna's community Slack](https://community-invite.fauna.com/). There's people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
 
 ## Sections:
 * <a href="#using-the-dashboard-shell">Using the dashboard shell</a>
