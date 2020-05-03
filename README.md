@@ -100,7 +100,7 @@ Create(
 * `Collection('Fruits')` gets a reference to the collection `Fruits`.
 * `{data: {name: 'Mango'}}` is the document you want to create.
 
-See the [CRUD tutorial](https://docs.fauna.com/fauna/current/tutorials/crud) for more info on how manipulate documents.
+See the [CRUD tutorial](https://docs.fauna.com/fauna/current/tutorials/crud) for more info on how to manipulate documents.
 
 #### Create a document with a predefined id
 First you need to retrieve a new unique id in the Fauna cluster with [NewId](https://docs.fauna.com/fauna/current/api/fql/functions/newid):
