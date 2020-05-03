@@ -318,7 +318,7 @@ Don't panic, let's break this down.
 We already understand from a previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right? So `Map` iterates over this array, executes `Lambda` on each item, and returns a new array with documents.
 
 This is the tricky part: `Lambda("fruitRef", Get(Var("fruitRef")))`:
-* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions. In this example we are defining an function that will take a reference and return a document.
+* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions. In this example we are defining a function that will take a reference and return a document.
 * `Lambda("fruitRef"...` defines a function parameter. It could be named anything: `fruit`, `X`, `Tarzan`, etc. The name is irrelevant. In this case the parameter will receive a single document reference that `Map` will pass to `Lambda` from `Paginate`.
 * `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. You couldn't simply use `fruitRef` or `"fruitRef"` because FQL wouldn't know what do with it. [Var](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) explicitly tells Fauna to find and evaluate a variable in the current context.
 * Finally `Get` receives a reference from `Var` and returns an actual document. This document is returned by `Lambda` to `Map` to form an array of documents.
