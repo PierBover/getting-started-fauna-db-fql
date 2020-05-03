@@ -12,6 +12,7 @@ Sections:
 * <a href="#naming-conventions">Documents and collections</a>
 * <a href="#about-relationships-and-references">Relationships and references</a>
 * <a href="#indexes">Indexes</a>
+* <a href="#gettings-multiple-documents-from-references">Gettings multiple documents from references</a>
 
 ## Using the dashboard shell
 You can input FQL queries directly in the web dashboard using a shell. It's a great way of figuring out how FQL works and it remembers the queries you've made.
