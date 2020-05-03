@@ -1,10 +1,12 @@
 # Getting started with FQL (Fauna Query Language)
 
-These are my notes on Fauna DB and FQL. Part explanation of basic things, part cookbook with snippets that I don't want to forget. I'm learning as I go along. Don't hesitate to correct me.
+This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL is difficult to grasp until it *clicks*.
+
+I'm also learning FQL as I go along so don't hesitate to correct me.
 
 To get started with Fauna just open a free account and go to the [dashboard](https://dashboard.fauna.com/).
 
-If you get stuck sign into the Fauna Slack. There's people from all timezones hanging there and willing to help. You can also ask in StackOverflow. Hopefully Fauna will create an indexable forum some day.
+If you get stuck sign into the [Fauna's community Slack](https://community-invite.fauna.com/). There's people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
 
 Sections:
 * <a href="#using-the-dashboard-shell">Using the dashboard shell</a>
@@ -17,7 +19,7 @@ Sections:
 ## Using the dashboard shell
 You can input FQL queries directly in the web dashboard using a shell. It's a great way of figuring out how FQL works and it remembers the queries you've made.
 
-### Shortcuts:
+#### Shortcuts:
 * Submit current query scope: <kbd>CMD</kbd> + <kbd>Enter</kbd>
 * Previous query: <kbd>CMD</kbd> + <kbd>UP</kbd>
 * Next query: <kbd>CMD</kbd> + <kbd>DOWN</kbd>
@@ -94,7 +96,7 @@ Create(
 * `Collection('Fruits')` gets a reference to the collection `Fruits`
 * `{data: {name: 'Mango'}}` is the document you want to create
 
-### Create a document with a predefined id
+#### Create a document with a predefined id
 First you need to retrieve a new unique id in the Fauna cluster with [NewId](https://docs.fauna.com/fauna/current/api/fql/functions/newid):
 ```js
 NewId()
@@ -103,7 +105,7 @@ NewId()
 
 "264517098691101203"
 ```
-And then you can create your new document with a reference to the provided `id` instead of the reference to the `Fruits` collection:
+And then you can create your new document with a reference to the provided `id` instead:
 ```js
 Create(
   Ref(Collection("Fruits"), "264517098691101203"),
@@ -221,19 +223,17 @@ Woah woah woah there's a lot going on there.
 
 Let's break it down. I've found sometimes it makes more sense to go backwards with FQL:
 * [Index](https://docs.fauna.com/fauna/current/api/fql/functions/index) returns a reference to an index.
-* [Match](https://docs.fauna.com/fauna/current/api/fql/functions/match) match is used to "execute" the index and returns a [Set](https://docs.fauna.com/fauna/current/api/fql/sets). You can use it to pass parameters the the index for filtering.
+* [Match](https://docs.fauna.com/fauna/current/api/fql/functions/match) is used to "execute" the index and returns a [Set](https://docs.fauna.com/fauna/current/api/fql/sets) of results. You can also use `Match` to pass parameters the the index for filtering.
 * [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) takes a `Set` and returns a page or list of references.
 
 Later on we'll see how to get actual documents instead of references and how to use `Match` for filtering.
 
-### Page size
+#### Page size
 By default `Paginate` returns pages with 64 items. You can define how many items you want to receive with `size`:
 ```js
 Paginate(
   Match(Index('all_Fruits')),
-  {
-    size: 3
-  }
+  {size: 3}
 )
 
 // Result:
@@ -249,9 +249,11 @@ Paginate(
   ]
 }
 ```
-In this case there are more results than fit in a single page so Fauna gives us the next document to use as a cursor. See the [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) docs for more on using cursors.
+Fauna gives us the next document with `after` to use as a cursor because in this case there are more results than fit in a single page of `3`.
 
-### Unique values
+See the [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) docs for more on using cursors.
+
+#### Unique values
 You can also use indexes to determine that a property of a document must be unique in the whole collection much like the `UNIQUE` constraint in SQL. This must be defined when creating the index:
 ```js
 CreateIndex({
@@ -265,17 +267,17 @@ CreateIndex({
 ```
 Even if you never use that index to retrieve documents it will ensure the `email` property in the `data` part of your document is unique accross the `Users` collection. Fauna will return an error if you try to insert a document that breaks that constraint.
 
-This `["data", "email"]` represents a path. We'll see more about these later but you can think of those like `data/email` or even `data.email`.
+`["data", "email"]` represents a path. We'll see more about these later but you can think of those like `data/email` or even `data.email`.
 
 ## Gettings multiple documents from references
 Ok so we know how to get a list of references from an index. How do we actually get documents?
 
-If you've used a functional language you might have come across `map` which executes a function on each item of an array and returns a new array. For example in JavaScript we use [`myArray.map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map).
+When programming you might have come across `map` which executes a function on each item of an array and returns a new array. For example in JavaScript we use [`myArray.map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map).
 
-Fauna also has a [Map](https://docs.fauna.com/fauna/current/api/fql/functions/index) function and we can use it to retrieve an array of documents from an array of references:
+Fauna also has a [Map](https://docs.fauna.com/fauna/current/api/fql/functions/index) function. We can use it to retrieve an array of documents from an array of references:
 ```js
 Map(
-  Paginate(Match(Index('all_Fruits'))),
+  Paginate(Match(Index("all_Fruits"))),
   Lambda("fruitRef", Get(Var("fruitRef")))
 )
 
@@ -303,15 +305,15 @@ Map(
 ```
 Don't panic, let's break this down.
 
-We already understand from the previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right? So `Map` iterates over this array, executes `Lambda` on each item, and returns a new array.
+We already understand from a previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right? So `Map` iterates over this array, executes `Lambda` on each item, and returns a new array with documents.
 
-This part is a bit tricky: `Lambda("fruitRef", Get(Var("fruitRef")))`:
-* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions.
+This is the tricky part: `Lambda("fruitRef", Get(Var("fruitRef")))`:
+* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions. In this example we are defning an function that will take a reference and return a document.
 * `Lambda("fruitRef"...` defines a function parameter. It could be named anything: `fruit`, `X`, `Tarzan`, etc. The name is irrelevant. In this case the parameter will receive a single document reference that `Map` will pass to `Lambda` from `Paginate`.
-* `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. You couldn't simply use `fruitRef` or `"fruitRef"` because FQL wouldn't know what do with it. With [Var](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) you explicitly tell Fauna to find a variable in the current context.
-* Finally `Get` receives the document reference from `Var` and returns a document. This document is returned by `Lambda` to `Map` to form an array of documents.
+* `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. You couldn't simply use `fruitRef` or `"fruitRef"` because FQL wouldn't know what do with it. [Var](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) explicitly tells Fauna to find and evaluate a variable in the current context.
+* Finally `Get` receives a reference from `Var` and returns an actual document. This document is returned by `Lambda` to `Map` to form an array of documents.
 
-So consider this JavaScript example:
+Consider this JavaScript example:
 ```js
 const newArray = myArray.map((item) => doSomething(item));
 // which is equivalent to:
