@@ -4,16 +4,17 @@ These are my notes on Fauna DB and FQL. Part explanation of basic things, part c
 
 To get started with Fauna just open a free account and go to the [dashboard](https://dashboard.fauna.com/).
 
-If you get stuck I recommend you to sign into the Fauna Slack. There's people from all timezones hanging there and willing to help. A chat is not ideal though as a lot of useful information gets lost. You can also ask in StackOverflow but hopefully Fauna will create an indexable forum some day.
+If you get stuck sign into the Fauna Slack. There's people from all timezones hanging there and willing to help. You can also ask in StackOverflow. Hopefully Fauna will create an indexable forum some day.
 
 ## Using the dashboard shell
-You can input FQL queries directly in the dashboard using a shell. It remembers the queries you've made and it's a great way of figuring out how FQL works.
+You can input FQL queries directly in the web dashboard using a shell. It's a great way of figuring out how FQL works and it remembers the queries you've made.
 
 ### Shortcuts:
 * Submit current query scope: <kbd>CMD</kbd> + <kbd>Enter</kbd>
 * Previous query: <kbd>CMD</kbd> + <kbd>UP</kbd>
 * Next query: <kbd>CMD</kbd> + <kbd>DOWN</kbd>
 * Undo: <kbd>CMD</kbd> + <kbd>Z</kbd>
+
 In Windows just change <kbd>CMD</kbd> for <kbd>Ctrl</kbd>
 
 ## Naming conventions
@@ -24,7 +25,7 @@ AFAIK there are no naming conventions in Fauna but this is what I've been doing 
 * Indexes go in snake_case with collections and properties as they exist in the database. Eg: `JazzArtists_by_musicalIntrument`.
 
 ## Documents and Collections
-Fauna doesn't have tables like in traditional relational databases. The smallest unit of data is a schemaless document. These are organized in collections which are essentially folders of documents with no order whatsoever. Fauna databases can also have children databases.
+Fauna doesn't have tables like traditional relational databases. The smallest unit of data is a schemaless document. These are organized in collections which are essentially buckets of documents with no order whatsoever. Fauna databases can also have children databases.
 
 This is what a document looks like:
 ```
@@ -61,14 +62,14 @@ As you can see collections are similar to documents with some special properties
 Now let's create a document with [Create](https://docs.fauna.com/fauna/current/api/fql/functions/create):
 ```js
 Create(
-	// this gets a reference to the collection "Fruits"
-	Collection('Fruits'),
-	// your new document
-	{
-		data: {
-			name: 'Mango'
-		}
-	}
+  // this gets a reference to the collection "Fruits"
+  Collection('Fruits'),
+  // your new document
+  {
+    data: {
+      name: 'Mango'
+    }
+  }
 )
 // result:
 {
@@ -100,28 +101,28 @@ Get(Ref(Collection("Fruits"), "264471980339626516"))
 So now we can start modeling relationships:
 ```js
 Create(
-	Collection('People'),
-	{
-		data: {
-			name: 'Pier',
-			favoriteFruitRef: Ref(Collection('Fruits'), "264471980339626516")
-		}
-	}
+  Collection('People'),
+  {
+    data: {
+      name: 'Pier',
+      favoriteFruitRef: Ref(Collection('Fruits'), "264471980339626516")
+    }
+  }
 )
 ```
 Or one to many:
 ```js
 Create(
-	Collection('People'),
-	{
-		data: {
-			name: 'Pier',
-			favoriteFruitsRefs: [
-				Ref(Collection('Fruits'), "264471980339626516"),
-				Ref(Collection('Fruits'), "467478980389696500")
-			]
-		}
-	}
+  Collection('People'),
+  {
+    data: {
+      name: 'Pier',
+      favoriteFruitsRefs: [
+        Ref(Collection('Fruits'), "264471980339626516"),
+        Ref(Collection('Fruits'), "467478980389696500")
+      ]
+    }
+  }
 )
 ```
 **Note:** If you're coming from SQL you might be tempted to store raw ids in your documents but it's much better to use the native `Ref` type as it will make your FQL life simpler.
@@ -152,9 +153,9 @@ As you can see indexes are also a special type of document. Pretty much everythi
 Add some more fruits to your database and then let's retreive all the references using the `all_Fruits` index:
 ```js
 Paginate(
-	Match(
-		Index('all_Fruits')
-	)
+  Match(
+    Index('all_Fruits')
+  )
 )
 // result:
 {
@@ -180,12 +181,12 @@ Later on we'll see how to get actual documents and not references.
 By default `Paginate` returns pages with 64 documents. You can define how many documents you want to receive with `size`:
 ```js
 Paginate(
-	Match(
-		Index('all_Fruits')
-	),
-	{
-		size: 3
-	}
+  Match(
+    Index('all_Fruits')
+  ),
+  {
+    size: 3
+  }
 )
 //result:
 {
@@ -207,7 +208,7 @@ CreateIndex({
   name: "Users_by_email",
   source: Collection("Users"),
   terms: [
-  	{field: ["data", "email"]}
+    {field: ["data", "email"]}
   ],
   unique: true,
 })
@@ -270,6 +271,6 @@ Maybe it will make more sense with this JavaScript example:
 const newArray = myArray.map((item) => doSomething(item));
 // which is equivalent to:
 const newArray = myArray.map(function (item) {
-	return doSomething(item)
+  return doSomething(item)
 });
 ````
