@@ -6,6 +6,13 @@ To get started with Fauna just open a free account and go to the [dashboard](htt
 
 If you get stuck sign into the Fauna Slack. There's people from all timezones hanging there and willing to help. You can also ask in StackOverflow. Hopefully Fauna will create an indexable forum some day.
 
+Sections:
+* <a href="#using-the-dashboard-shell">Using the dashboard shell</a>
+* <a href="#naming-conventions">Naming conventions</a>
+* <a href="#naming-conventions">Documents and collections</a>
+* <a href="#about-relationships-and-references">Relationships and references</a>
+* <a href="#indexes">Indexes</a>
+
 ## Using the dashboard shell
 You can input FQL queries directly in the web dashboard using a shell. It's a great way of figuring out how FQL works and it remembers the queries you've made.
 
@@ -21,14 +28,14 @@ In Windows just change <kbd>CMD</kbd> for <kbd>Ctrl</kbd>
 AFAIK there are no naming conventions in Fauna but this is what I've been doing and it has stuck:
 * Collections go in PascalCase. Eg: `MyFavoriteThings`.
 * Document properties go in camelCase. Eg: `musicalInstrument`.
-* References in a document always end with `Ref`. Eg: `userRef`.
+* References in a document always end with `Ref` or `Refs` in the case of arrays. Eg: `userRef` or `productsRefs`.
 * Indexes go in snake_case with collections and properties as they exist in the database. Eg: `JazzArtists_by_musicalIntrument`.
 
-## Documents and Collections
+## Documents and collections
 Fauna doesn't have tables like traditional relational databases. The smallest unit of data is a schemaless document. These are organized in collections which are essentially buckets of documents with no order whatsoever. Fauna databases can also have children databases.
 
 This is what a document looks like:
-```
+```js
 {
   "ref": Ref(Collection("Fruits"), "264471980339626516"),
   "ts": 1588478985090000,
@@ -39,7 +46,7 @@ This is what a document looks like:
 ```
 
 Each document is composed by:
-* A reference (`ref` in short). More on refs later, but this essentially represents a location in the database. In this case this represents the document with the id `264471980339626516` in the `Fruits` collection.
+* A reference (`ref` in short). More on refs later, but this represents a location in the database. In this case  `Ref(Collection("Fruits"), "264471980339626516")` represents the document with the id `264471980339626516` in the `Fruits` collection.
 * A timestamp `ts` in nanoseconds.
 * Some `data` that looks and behaves pretty much like JavaScript objects with some special Fauna types like `Ref`.
 
@@ -48,7 +55,9 @@ Each document is composed by:
 Let's create a collection with [CreateCollection](https://docs.fauna.com/fauna/current/api/fql/functions/createcollection):
 ```js
 CreateCollection({ name: "Fruits" })
-// result:
+
+// Result:
+
 {
   "ref": Collection("Fruits"),
   "ts": 1588478932770000,
@@ -62,16 +71,16 @@ As you can see collections are similar to documents with some special properties
 Now let's create a document with [Create](https://docs.fauna.com/fauna/current/api/fql/functions/create):
 ```js
 Create(
-  // this gets a reference to the collection "Fruits"
-  Collection('Fruits'),
-  // your new document
+  Collection("Fruits"),
   {
     data: {
-      name: 'Mango'
+      name: "Mango"
     }
   }
 )
-// result:
+
+// Result:
+
 {
   "ref": Ref(Collection("Fruits"), "264471980339626516"),
   "ts": 1588478985090000,
@@ -80,16 +89,47 @@ Create(
   }
 }
 ```
+* `Create` is the function used to create documents
+* `Collection('Fruits')` gets a reference to the collection `Fruits`
+* `{data: {name: 'Mango'}}` is the document you want to create
 
-## About relationships and references
-Relationships in Fauna are modelled with references. A [Ref](https://docs.fauna.com/fauna/current/api/fql/functions/ref) is a type of data in Fauna which points to a location in the database. For documents this reference includes an `id` property which would be the `264471980339626516` in the previous example.
-
-You can get a reference to a collection using [Collection](https://docs.fauna.com/fauna/current/api/fql/functions/collection) which you can use to create documents as you have seen in the previous example.
-
-Remember that a reference is not a thing, it's a pointer to a thing. If you want to retrieve a document from a reference you need to use the [Get](https://docs.fauna.com/fauna/current/api/fql/functions/get) function:
+### Create a document with a predefined id
+First you need to retrieve a new unique id in the Fauna cluster with [NewId](https://docs.fauna.com/fauna/current/api/fql/functions/newid):
 ```js
-Get(Ref(Collection("Fruits"), "264471980339626516"))
-// result:
+NewId()
+
+// Result:
+
+"264517098691101203"
+```
+And then you can create your new document with a reference to the provided `id` instead of the reference to the `Fruits` collection:
+```js
+Create(
+  Ref(Collection("Fruits"), "264517098691101203"),
+  {
+    data: {
+      name: "Apple"
+    }
+  }
+)
+```
+
+## Relationships and references
+Relationships in Fauna are modelled with references. A [Ref](https://docs.fauna.com/fauna/current/api/fql/functions/ref) is a type of data in Fauna which points to a location in the database. For documents this reference includes an `id` property which would be the `264517098691101203` in the previous example.
+
+Remember that a reference is not a thing, it's a pointer to a thing (documents, collections, etc).
+
+If you want to retrieve a document from a reference you need to use the [Get](https://docs.fauna.com/fauna/current/api/fql/functions/get) function:
+```js
+Get(
+  Ref(
+    Collection("Fruits"),
+    "264471980339626516"
+  )
+)
+
+// Result:
+
 {
   "ref": Ref(Collection("Fruits"), "264471980339626516"),
   "ts": 1588478985090000,
@@ -98,28 +138,28 @@ Get(Ref(Collection("Fruits"), "264471980339626516"))
   }
 }
 ```
-So now we can start modeling relationships:
+So this is how you could model a relationship between documents:
 ```js
 Create(
-  Collection('People'),
+  Collection("People"),
   {
     data: {
-      name: 'Pier',
-      favoriteFruitRef: Ref(Collection('Fruits'), "264471980339626516")
+      name: "Pier",
+      favoriteFruitRef: Ref(Collection("Fruits"), "264471980339626516")
     }
   }
 )
 ```
-Or one to many:
+Or:
 ```js
 Create(
-  Collection('People'),
+  Collection("People"),
   {
     data: {
-      name: 'Pier',
+      name: "Pier",
       favoriteFruitsRefs: [
-        Ref(Collection('Fruits'), "264471980339626516"),
-        Ref(Collection('Fruits'), "467478980389696500")
+        Ref(Collection("Fruits"), "264471980339626516"),
+        Ref(Collection("Fruits"), "467478980389696500")
       ]
     }
   }
@@ -128,7 +168,9 @@ Create(
 **Note:** If you're coming from SQL you might be tempted to store raw ids in your documents but it's much better to use the native `Ref` type as it will make your FQL life simpler.
 
 ## Indexes
-Getting one document at a time with `Get` gets old pretty fast. Since collections are just buckets of documents with no order you need to use indexes to retreive multiple documents, sort, filter, and more.
+Retrieving one document at a time with `Get` won't get you very far. Since collections are just buckets of documents, you need to use indexes to create some order, retreive multiple documents, sort, filter, and more.
+
+The combination of a collection and an index is probably the closest you will get to a table of a relational database. The big difference being that rows can only belong to a single table but Fauna documents can belong to as many indexes as you need.
 
 Let's create our first index with [CreateIndex](https://docs.fauna.com/fauna/current/api/fql/functions/createindex):
 ```js
@@ -136,7 +178,9 @@ CreateIndex({
   name: "all_Fruits",
   source: Collection("Fruits")
 })
-// result:
+
+// Result:
+
 {
   "ref": Index("all_Fruits"),
   "ts": 1588482162446000,
@@ -150,14 +194,16 @@ CreateIndex({
 
 As you can see indexes are also a special type of document. Pretty much everything in Fauna is a document.
 
-Add some more fruits to your database and then let's retreive all the references using the `all_Fruits` index:
+After adding some more fruits to your `Fruits` collection let's retreive all the references using the `all_Fruits` index we just created:
 ```js
 Paginate(
   Match(
-    Index('all_Fruits')
+    Index("all_Fruits")
   )
 )
-// result:
+
+// Result:
+
 {
   "data": [
     Ref(Collection("Fruits"), "264471980339626516"),
@@ -170,27 +216,28 @@ Paginate(
   ]
 }
 ```
-Woah woah woah there's a lot going on there. Let's break it down. I've found sometimes it makes more sense to go backwards with FQL:
-* [Index](https://docs.fauna.com/fauna/current/api/fql/functions/index) returns a reference to an index
-* [Match](https://docs.fauna.com/fauna/current/api/fql/functions/match) match is used to "execute" the index and returns a [Set](https://docs.fauna.com/fauna/current/api/fql/sets). Later on we'll see how it's used to pass parameters for filtering.
-* [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) takes a `Set` and, in this case, returns a page of references.
+Woah woah woah there's a lot going on there.
 
-Later on we'll see how to get actual documents and not references.
+Let's break it down. I've found sometimes it makes more sense to go backwards with FQL:
+* [Index](https://docs.fauna.com/fauna/current/api/fql/functions/index) returns a reference to an index.
+* [Match](https://docs.fauna.com/fauna/current/api/fql/functions/match) match is used to "execute" the index and returns a [Set](https://docs.fauna.com/fauna/current/api/fql/sets). You can use it to pass parameters the the index for filtering.
+* [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) takes a `Set` and returns a page or list of references.
+
+Later on we'll see how to get actual documents instead of references and how to use `Match` for filtering.
 
 ### Page size
-By default `Paginate` returns pages with 64 documents. You can define how many documents you want to receive with `size`:
+By default `Paginate` returns pages with 64 items. You can define how many items you want to receive with `size`:
 ```js
 Paginate(
-  Match(
-    Index('all_Fruits')
-  ),
+  Match(Index('all_Fruits')),
   {
     size: 3
   }
 )
-//result:
+
+// Result:
+
 {
-  // since there are more fruits than fit in a page Fauna gives us the next document to use as a cursor
   "after": [
     Ref(Collection("Fruits"), "264476941393854996")
   ],
@@ -200,9 +247,11 @@ Paginate(
     Ref(Collection("Fruits"), "264476925331767828")
   ]
 }
-````
+```
+In this case there are more results than fit in a single page so Fauna gives us the next document to use as a cursor. See the [Paginate](https://docs.fauna.com/fauna/current/api/fql/functions/paginate) docs for more on using cursors.
+
 ### Unique values
-You can also use indexes to determine that a property of a document must be unique in the whole collection. This must be defined when creating the index like this:
+You can also use indexes to determine that a property of a document must be unique in the whole collection much like the `UNIQUE` constraint in SQL. This must be defined when creating the index:
 ```js
 CreateIndex({
   name: "Users_by_email",
@@ -215,20 +264,22 @@ CreateIndex({
 ```
 Even if you never use that index to retrieve documents it will ensure the `email` property in the `data` part of your document is unique accross the `Users` collection. Fauna will return an error if you try to insert a document that breaks that constraint.
 
-These are the basics about indexes. You can read [more about indexes here](https://docs.fauna.com/fauna/current/api/fql/indexes) and follow [this official tutorial](https://docs.fauna.com/fauna/current/tutorials/indexes/) to learn to sort and filter.
+This `["data", "email"]` represents a path. We'll see more about these later but you can think of those like `data/email` or even `data.email`.
 
 ## Gettings multiple documents from references
-Ok so we know how to get a list of references with an index. But how do we actually get the documents?
+Ok so we know how to get a list of references from an index. How do we actually get documents?
 
-If you've used a functional language you might have come across `map` which executes a function on each item of an array and returns a new array. In JavaScript for example this is done with [`myArray.map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map).
+If you've used a functional language you might have come across `map` which executes a function on each item of an array and returns a new array. For example in JavaScript we use [`myArray.map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map).
 
-Fauna also has a [Map](https://docs.fauna.com/fauna/current/api/fql/functions/index) function which we'll use to do exactly that.
+Fauna also has a [Map](https://docs.fauna.com/fauna/current/api/fql/functions/index) function and we can use it to retrieve an array of documents from an array of references:
 ```js
 Map(
   Paginate(Match(Index('all_Fruits'))),
   Lambda("fruitRef", Get(Var("fruitRef")))
 )
-// results:
+
+// Result:
+
 {
   "data": [
     {
@@ -245,32 +296,34 @@ Map(
         "name": "Apple"
       }
     },
-    {
-      "ref": Ref(Collection("Fruits"), "264476925331767828"),
-      "ts": 1588483701000000,
-      "data": {
-        "name": "Banana"
-      }
-    },
     // etc
   ]
 }
 ```
-Let's break this down:
-* We already understand from the previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right?
-* `Map` will iterate over the array returned by `Paginate`, execute the function defined by `Lambda` on each item, and return a new array formed by the return values of `Lambda`.
+Don't panic, let's break this down.
 
-### Understanding `Lambda`
-This part is a bit tricky: `Lambda("fruitRef", Get(Var("fruitRef")))`.
-* `Lambda("fruitRef"...` defines a new variable in the context of the body of the anonymous function. It could be named anything `fruit`, `X`, `Tarzan`, etc. The name is irrelevant.
-* `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. We know it's a reference to a document because it comes from the `Paginate` function.
-* Finally `Get` receives the document reference from `Var` and returns a document. This document in turn is returned by `Lambda` to `Map` to form a new array of documents.
+We already understand from the previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right? So `Map` iterates over this array, executes `Lambda` on each item, and returns a new array.
 
-Maybe it will make more sense with this JavaScript example:
+This part is a bit tricky: `Lambda("fruitRef", Get(Var("fruitRef")))`:
+* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions.
+* `Lambda("fruitRef"...` defines a function parameter. It could be named anything: `fruit`, `X`, `Tarzan`, etc. The name is irrelevant. In this case the parameter will receive a single document reference that `Map` will pass to `Lambda` from `Paginate`.
+* `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. You couldn't simply use `fruitRef` or `"fruitRef"` because FQL wouldn't know what do with it. With [Var](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) you explicitly tell Fauna to find a variable in the current context.
+* Finally `Get` receives the document reference from `Var` and returns a document. This document is returned by `Lambda` to `Map` to form an array of documents.
+
+So consider this JavaScript example:
 ```js
 const newArray = myArray.map((item) => doSomething(item));
 // which is equivalent to:
 const newArray = myArray.map(function (item) {
-  return doSomething(item)
+  return doSomething(item);
 });
-````
+```
+If you were using the JavaScript Fauna driver you could write something like this instead of using `Lambda`:
+```js
+const result = await client.query(
+	q.Map(
+	  q.Paginate(q.Match(q.Index('all_Fruits'))),
+	  (fruitRef) => q.Get(fruitRef)
+	)
+)
+```
