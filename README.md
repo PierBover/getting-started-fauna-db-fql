@@ -6,7 +6,7 @@ I'm also learning FQL as I go along so don't hesitate to correct me.
 
 To get started with Fauna just open a free account and go to the [dashboard](https://dashboard.fauna.com/).
 
-If you get stuck sign into [Fauna's community Slack](https://community-invite.fauna.com/). There's people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
+If you get stuck sign into [Fauna's community Slack](https://community-invite.fauna.com/). There are people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
 
 ## Sections:
 * <a href="#using-the-dashboard-shell">Using the dashboard shell</a>
