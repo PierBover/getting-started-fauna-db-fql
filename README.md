@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="logo-fauna.png" height="100" alt="">
+</p>
+
 # Getting started with FQL (Fauna Query Language)
 
 This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL is difficult to grasp until it *clicks*. Each section builds on the previous ones so if you are just skimming and don't understand something you probably need to go back.
@@ -21,6 +25,8 @@ If you get stuck sign into the [Fauna's community Slack](https://community-invit
 * <a href="#getting-custom-results-instead-of-full-documents">Getting custom results instead of full documents</a>
 
 ## Using the dashboard shell
+![Fauna Dashboard Shell](shell.jpg)
+
 You can input FQL queries directly in the web dashboard using a shell. It's a great way of figuring out how FQL works and it remembers the queries you've made.
 
 #### Shortcuts:
@@ -100,7 +106,7 @@ Create(
 * `Collection('Fruits')` gets a reference to the collection `Fruits`.
 * `{data: {name: 'Mango'}}` is the document you want to create.
 
-See the [CRUD tutorial](https://docs.fauna.com/fauna/current/tutorials/crud) for more info on how manipulate documents.
+See the [CRUD tutorial](https://docs.fauna.com/fauna/current/tutorials/crud) for more info on how to manipulate documents.
 
 #### Create a document with a predefined id
 First you need to retrieve a new unique id in the Fauna cluster with [NewId](https://docs.fauna.com/fauna/current/api/fql/functions/newid):
