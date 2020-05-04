@@ -4,13 +4,13 @@
 
 # Getting started with FQL (Fauna Query Language)
 
-This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL is difficult to grasp until it *clicks*. Each section builds on the previous ones so if you are just skimming and don't understand something you probably need to go back.
+This is not an exhaustive documentation but a series of ideas and examples that can help you approach the official docs more easily. I found FQL to be difficult to grasp until it *clicks*. Each section builds on the previous ones so if you are just skimming and don't understand something you probably need to go back.
 
 I'm also learning FQL as I go along so don't hesitate to correct me.
 
 To get started with Fauna just open a free account and go to the [dashboard](https://dashboard.fauna.com/).
 
-If you get stuck sign into the [Fauna's community Slack](https://community-invite.fauna.com/). There's people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
+If you get stuck sign into [Fauna's community Slack](https://community-invite.fauna.com/). There are people there from all timezones willing to help. You can also ask in StackOverflow using the [`faunadb`](https://stackoverflow.com/questions/tagged/faunadb) tag.
 
 ## Sections:
 * <a href="#using-the-dashboard-shell">Using the dashboard shell</a>
@@ -276,7 +276,7 @@ CreateIndex({
   terms: [
     {field: ["data", "email"]}
   ],
-  unique: true,
+  unique: true
 })
 ```
 Even if you never use that index to retrieve documents it will ensure the `email` property in the `data` part of your document is unique accross the `Users` collection. Fauna will return an error if you try to insert a document that breaks that constraint.
@@ -324,7 +324,7 @@ Don't panic, let's break this down.
 We already understand from a previous example that `Paginate(Match(Index('all_Fruits')))` returns an array of references, right? So `Map` iterates over this array, executes `Lambda` on each item, and returns a new array with documents.
 
 This is the tricky part: `Lambda("fruitRef", Get(Var("fruitRef")))`:
-* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions. In this example we are defining an function that will take a reference and return a document.
+* [Lambda](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) is used in FQL to define anonymous functions. In this example we are defining a function that will take a reference and return a document.
 * `Lambda("fruitRef"...` defines a function parameter. It could be named anything: `fruit`, `X`, `Tarzan`, etc. The name is irrelevant. In this case the parameter will receive a single document reference that `Map` will pass to `Lambda` from `Paginate`.
 * `Var("fruitRef")` evaluates the variable named `fruitRef` in the context of the function. You couldn't simply use `fruitRef` or `"fruitRef"` because FQL wouldn't know what do with it. [Var](https://docs.fauna.com/fauna/current/api/fql/functions/lambda) explicitly tells Fauna to find and evaluate a variable in the current context.
 * Finally `Get` receives a reference from `Var` and returns an actual document. This document is returned by `Lambda` to `Map` to form an array of documents.
