@@ -270,7 +270,7 @@ CreateIndex({
   terms: [
     {field: ["data", "email"]}
   ],
-  unique: true,
+  unique: true
 })
 ```
 Even if you never use that index to retrieve documents it will ensure the `email` property in the `data` part of your document is unique accross the `Users` collection. Fauna will return an error if you try to insert a document that breaks that constraint.
